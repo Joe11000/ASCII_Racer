@@ -44,6 +44,7 @@ until game.finished?
     game.advance_player(player)
     
     # We need to sleep a little, otherwise the game will blow right past us.
+    # See http://www.ruby-doc.org/core-1.9.3/Kernel.html#method-i-sleep
     sleep(0.5)
   end
 end
