@@ -1,6 +1,8 @@
 require_relative 'racer_utils'
 
 class RubyRacer
+  attr_reader :players, :length
+
   def initialize(players, length = 30)
   end
   
