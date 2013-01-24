@@ -31,7 +31,7 @@ players = ['a', 'b']
 
 game = RubyRacer.new(players)
 
-# This clears the screen
+# This clears the screen, so the fun can begin
 clear_screen!
 
 until game.finished?
