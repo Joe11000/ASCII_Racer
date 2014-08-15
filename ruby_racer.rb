@@ -3,11 +3,12 @@
 # output: no valuable output (besides pretty race and congradulatory comments to winner)
 
 require_relative 'racer_utils'
+require 'pry'
 
 class RubyRacer
   attr_reader :players, :length
 
-  def initialize(players=2, length = 30)
+  def initialize(players=[a,b], length=30)
     @players = players
     @player_colors = ["\033[92m","\033[91m","\033[96m", "\033[94m","\033[95m", "\033[93m"] # green, red, light-blue, blue, pink, yellow
     @length = length
@@ -26,11 +27,25 @@ class RubyRacer
   def advance_player!(player)
     single_roll = @die.roll # save new dice roll
 
-    if single_roll + @racers_hash[player] >= @length-1 # if reach end of track
-      @racers_hash[player] = length-1 ## Might be length or length-1
-    else  # not at end of track
-      @racers_hash[player] += single_roll
+    @racers_hash[player] += single_roll
+  end
+
+  def determine_winners
+    winner_so_far = @players.first
+    winners = []
+    # binding.pry
+    @players.each do |p|
+      if @racers_hash[winner_so_far] < @racers_hash[p]
+        winner_so_far = p
+        winners = [p]
+      elsif if @racers_hash[winner_so_far] == @racers_hash[p]
+        winners << p
+      end
+
+      end
     end
+
+    winners
   end
 
   # Prints the current game board
@@ -44,34 +59,48 @@ class RubyRacer
       print " | " * (@racers_hash[p] - 1) + @player_colors[loop_counter % @player_colors.size]
       print " #{@players[loop_counter][0]} "
       print color_end
-      print  " | " * (@length - (@racers_hash[p]) - 1)
+      print  " | " * (@length - (@racers_hash[p] < length-1 ? @racers_hash[p] : length-1)  - 1)
       loop_counter += 1
       puts
     end
   end
 end
 
-def startRace(names_array)
-  game = RubyRacer.new(names_array)
+def startRace(names_array, length)
+  game = RubyRacer.new(names_array, length)
 
   clear_screen! # This clears the screen, so the fun can begin
 
   move_to_home! # This moves the cursor back to the upper-left of the screen
   game.print_board # put starting screen
 
-  names_array.cycle do |player|
-    move_to_home! # This moves the cursor back to the upper-left of the screen
+  somebody_finished = false
 
-    game.advance_player!(player) # We print the board first so we see the initial, starting board
-    game.print_board
-    if game.finished?(player)
-      puts "#{player.capitalize!} WON!!!!!"
-      puts "*Slap on the butt.* Thanks for playing."
-      break
+  until somebody_finished do
+
+    names_array.each do |player|
+      move_to_home! # This moves the cursor back to the upper-left of the screen
+      game.advance_player!(player) # We print the board first so we see the initial, starting board
+      game.print_board
+
+      if game.finished?(player)
+        somebody_finished = true
+      end
+
+      names_array.size >= 10 ? sleep(0.05) : sleep(0.1) # if number if racers is > 10 then sleep less time
     end
-
-    names_array.size >= 10 ? sleep(0.05) : sleep(0.1) # if number if racers is > 10 then sleep less time
   end
+
+  result = game.determine_winners
+  if result.length == 1
+    puts "#{result.first} Won!!!!"
+  else
+    puts "#{result.join(', ')} TIED!!!!"
+  end
+
+  puts "*Slap on the butt.* Thanks for playing."
 end
 
-startRace(('a'..'z').to_a)
+
+racers = ('a'..'g').to_a
+startRace(racers, 60)
