@@ -6,12 +6,12 @@ require_relative 'racer_utils'
 require 'pry'
 
 class RubyRacer
-  attr_reader :players, :length
+  attr_reader :players, :track_length
 
-  def initialize(players=[a,b], length=30)
+  def initialize(players=[a,b], track_length=30)
     @players = players
     @player_colors = ["\033[92m","\033[91m","\033[96m", "\033[94m","\033[95m", "\033[93m"] # green, red, light-blue, blue, pink, yellow
-    @length = length
+    @track_length = track_length
     @die = Die.new
     @racers_hash = {}
     players.each {|player| @racers_hash[player] = 1 }
@@ -20,7 +20,7 @@ class RubyRacer
   # Returns +true+ if one of the players has reached
   # the finish line, +false+ otherwise
   def finished?(player)
-    @racers_hash[player] >= length-1
+    @racers_hash[player] >= track_length-1
   end
 
   # Rolls the dice and advances +player+ accordingly
@@ -59,15 +59,34 @@ class RubyRacer
       print " | " * (@racers_hash[p] - 1) + @player_colors[loop_counter % @player_colors.size]
       print " #{@players[loop_counter][0]} "
       print color_end
-      print  " | " * (@length - (@racers_hash[p] < length-1 ? @racers_hash[p] : length-1)  - 1)
+      print  " | " * (@track_length - (@racers_hash[p] < track_length-1 ? @racers_hash[p] : track_length-1)  - 1)
       loop_counter += 1
       puts
     end
   end
 end
 
-def startRace(names_array, length)
-  game = RubyRacer.new(names_array, length)
+# 1 -> num_of_racers < 95
+def get_racers(num_of_racers)
+  num_of_racers = 1  if num_of_racers < 1
+  num_of_racers = 94 if num_of_racers > 94
+
+  length_of_alphabet = 26
+  racers = []
+
+  case num_of_racers
+    when 1..26;  then racers = 97.upto(96 + num_of_racers).to_a.map{|num| num.chr}
+    when 27..52; then racers = 'a'.upto('z').to_a + 65.upto(64 + (num_of_racers - length_of_alphabet)).to_a.map{|num| num.chr}
+    else              racers = 33.upto(33 + num_of_racers).to_a.map{|num| num.chr} # inverse of  'A'.ord.chr = 'A'
+  end
+
+  racers
+end
+
+def startRace(num_of_racers, track_length)
+  names_array = get_racers(num_of_racers)
+
+  game = RubyRacer.new(names_array, track_length)
 
   clear_screen! # This clears the screen, so the fun can begin
 
@@ -92,15 +111,11 @@ def startRace(names_array, length)
   end
 
   result = game.determine_winners
-  if result.length == 1
+  if result.size == 1
     puts "#{result.first} Won!!!!"
   else
-    puts "#{result.join(', ')} TIED!!!!"
+    puts "#{result.join(', ')} TIED!!!! A #{result.size} way tie."
   end
 
   puts "*Slap on the butt.* Thanks for playing."
 end
-
-
-racers = ('a'..'g').to_a
-startRace(racers, 60)
